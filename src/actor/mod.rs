@@ -7,9 +7,11 @@ use async_trait::async_trait;
 use async_std::sync::RwLock;
 use async_std::channel::{Sender};
 use std::ops::{Deref, DerefMut};
+use core::hash::Hash;
 
 pub trait Role{
     type Actor: Actor;
+    type Key: Hash;
 
     type Calls: Handler<Self::Actor>;
     type MutCalls: MutHandler<Self::Actor>;
