@@ -1,4 +1,2 @@
-#[macro_use]
-pub extern crate broadway_macro;
-
 pub mod actor;
+pub use broadway_macro;
