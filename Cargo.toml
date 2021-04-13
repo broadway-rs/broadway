@@ -12,3 +12,4 @@ async-std = {version = "1.9.0", features = ["attributes"]}
 futures = "0.3.13"
 async-trait = "0.1.48"
 broadway_macro = {git = "https://github.com/broadway-rs/broadway-macro", branch = "main"}
+dashmap = "4.0.2"
