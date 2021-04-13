@@ -4,15 +4,19 @@ use stage::Stage;
 use dashmap::DashMap;
 use std::any::{Any, TypeId};
 use crate::actor::{Role, ActorChannel};
+use crate::BroadwayContext;
+use crate::backstage::Backstage;
 
-pub struct Venue{
-    stages: DashMap<TypeId, Box<dyn Any>>
+pub struct Broadway<B: Backstage + 'static>{
+    stages: DashMap<TypeId, Box<dyn Any>>,
+    ctx: BroadwayContext<B>,
 }
 
-impl Venue{
-    pub fn new() -> Self{
+impl<B: Backstage + 'static> Broadway<B>{
+    pub fn new(ctx: BroadwayContext<B>) -> Self{
         Self{
             stages: DashMap::new(),
+            ctx
         }
     }
 
@@ -21,10 +25,10 @@ impl Venue{
         let type_id = TypeId::of::<T>();
         self.stages
             .entry(type_id.clone())
-            .or_insert(Box::new(Stage::<T>::new()))
+            .or_insert(Box::new(Stage::<T, B>::new(self.ctx.clone())))
             .downgrade()
             .value()
-            .downcast_ref::<Stage<T>>()
+            .downcast_ref::<Stage<T, B>>()
             .unwrap()
             .get_actor(key)
     }
