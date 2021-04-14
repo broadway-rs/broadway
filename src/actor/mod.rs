@@ -11,6 +11,7 @@ use futures::future;
 use std::ops::{Deref, DerefMut};
 use switch_channel::async_channel::async_std::{diunbounded, DiSwitchReceiver, DiSwitchSender};
 use switch_channel::err::recv::RecvError;
+use crate::BroadwayContext;
 
 pub trait Role {
     type Actor: Actor + Serialize + DeserializeOwned;
@@ -20,16 +21,19 @@ pub trait Role {
     type MutCalls: MutHandler<Self::Actor>;
 }
 
+#[async_trait]
 pub trait Actor: Send + Sync {
     fn new() -> Self;
 
-    fn start(&self) {}
+    async fn start(&mut self, ctx: Arc<BroadwayContext>) {}
 
-    fn stop(&self) {}
+    async fn stop(&mut self) {}
 }
 
 pub struct ActorInstance<T: Role + ?Sized> {
-    handling_loop: Option<Box<dyn std::future::Future<Output = T::Actor>>>,
+    pub(self) handling_loop: Option<Box<dyn std::future::Future<Output = T::Actor>>>,
+    pub(self) actor: Option<T::Actor>,
+    pub(self) channel: Option<(DiSwitchReceiver<T::Calls>, DiSwitchReceiver<T::MutCalls>)>,
 }
 
 pub struct ActorChannel<T: Role + ?Sized> {
@@ -47,12 +51,11 @@ impl<T: Role + ?Sized> Clone for ActorChannel<T> {
 }
 
 impl<T: 'static + Role + ?Sized> ActorInstance<T> {
-    pub fn start() -> (ActorChannel<T>, ActorInstance<T>) {
+    pub(crate) fn build_actor() -> (ActorChannel<T>, ActorInstance<T>) {
         let (mut_calls_sender, mut_calls) = diunbounded();
         let (calls_sender, calls) = diunbounded();
 
         let actor = T::Actor::new();
-        actor.start();
 
         (
             ActorChannel {
@@ -60,21 +63,31 @@ impl<T: 'static + Role + ?Sized> ActorInstance<T> {
                 mut_calls_sender,
             },
             ActorInstance {
-                handling_loop: Some(Box::new(task::spawn(Self::run_actor(
-                    RwLock::new(actor),
-                    calls,
-                    mut_calls,
-                )))),
+                handling_loop: None,
+                actor: Some(actor),
+                channel: Some((calls, mut_calls)),
             },
         )
     }
 
+    /// This function is kind of weird, because I only ever want an actor that has been instantiated
+    /// to start ONCE across an entire cluster, knowing this may be impossible, I atleast want to ensure
+    /// it only ever happens ONCE per node.
+    pub(crate) fn start_actor(&mut self, ctx: Arc<BroadwayContext>){
+        if let Some(mut actor) = self.actor.take(){
+            let (calls, mut_calls) = self.channel.take().unwrap();
+            self.handling_loop = Some(Box::new(task::spawn(Self::run_actor(ctx, actor, calls, mut_calls))))
+        }
+    }
+
     async fn run_actor(
-        actor: RwLock<T::Actor>,
+        ctx: Arc<BroadwayContext>,
+        mut actor: T::Actor,
         calls: DiSwitchReceiver<T::Calls>,
         mut_calls: DiSwitchReceiver<T::MutCalls>,
     ) -> T::Actor {
-        actor.read().await.start();
+        actor.start(ctx).await;
+        let actor = RwLock::new(actor);
         let mut call_fut = None;
         let mut mut_call_fut = None;
         let mut priority = false;

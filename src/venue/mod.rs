@@ -20,7 +20,7 @@ impl Venue{
         }
     }
 
-    pub fn get_actor<T>(&self, key: T::Key) -> ActorChannel<T>
+    pub async fn get_actor<T>(&self, key: T::Key) -> ActorChannel<T>
         where T: Role + ?Sized + 'static{
         let type_id = TypeId::of::<T>();
         self.stages
@@ -31,5 +31,6 @@ impl Venue{
             .downcast_ref::<Stage<T>>()
             .unwrap()
             .get_actor(key)
+            .await
     }
 }
