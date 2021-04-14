@@ -1,5 +1,7 @@
 use dashmap::DashMap;
+use std::sync::Arc;
 use crate::actor::{Role, ActorChannel, ActorInstance};
+use crate::BroadwayContext;
 
 /// This might get removed, but the idea with this is that
 /// it's the services view of the actor, since the service
@@ -20,13 +22,15 @@ pub enum ActorStatus{
 }
 
 pub struct Stage<T: Role + ?Sized>{
-    actors: DashMap<T::Key, Actor<T>>
+    actors: DashMap<T::Key, Actor<T>>,
+    ctx: Arc<BroadwayContext>,
 }
 
 impl<T: Role + ?Sized + 'static> Stage<T>{
-    pub fn new() -> Self{
+    pub fn new(ctx: Arc<BroadwayContext>) -> Self{
         Self{
-            actors: DashMap::new()
+            actors: DashMap::new(),
+            ctx,
         }
     }
 

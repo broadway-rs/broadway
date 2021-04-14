@@ -1,3 +1,4 @@
+use serde::{Serialize, de::DeserializeOwned};
 use async_std::channel::Sender;
 use async_std::sync::Arc;
 use async_std::sync::RwLock;
@@ -10,8 +11,8 @@ use switch_channel::async_channel::async_std::{diunbounded, DiSwitchReceiver, Di
 use switch_channel::err::recv::RecvError;
 
 pub trait Role {
-    type Actor: Actor;
-    type Key: Hash + Eq;
+    type Actor: Actor + Serialize + DeserializeOwned;
+    type Key: Hash + Eq + Serialize + DeserializeOwned;
 
     type Calls: Handler<Self::Actor>;
     type MutCalls: MutHandler<Self::Actor>;

@@ -3,16 +3,20 @@ mod stage;
 use stage::Stage;
 use dashmap::DashMap;
 use std::any::{Any, TypeId};
+use std::sync::Arc;
 use crate::actor::{Role, ActorChannel};
+use crate::BroadwayContext;
 
 pub struct Venue{
-    stages: DashMap<TypeId, Box<dyn Any>>
+    stages: DashMap<TypeId, Box<dyn Any>>,
+    ctx: Arc<BroadwayContext>,
 }
 
 impl Venue{
-    pub fn new() -> Self{
+    pub fn new(ctx: BroadwayContext) -> Self{
         Self{
             stages: DashMap::new(),
+            ctx: Arc::new(ctx),
         }
     }
 
@@ -21,7 +25,7 @@ impl Venue{
         let type_id = TypeId::of::<T>();
         self.stages
             .entry(type_id.clone())
-            .or_insert(Box::new(Stage::<T>::new()))
+            .or_insert(Box::new(Stage::<T>::new(self.ctx.clone())))
             .downgrade()
             .value()
             .downcast_ref::<Stage<T>>()

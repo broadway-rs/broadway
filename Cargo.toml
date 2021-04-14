@@ -13,3 +13,5 @@ futures = "0.3.13"
 async-trait = "0.1.48"
 broadway_macro = {git = "https://github.com/broadway-rs/broadway-macro", branch = "main"}
 dashmap = "4.0.2"
+serde = "1.0.125"
+bincode = "1.3.3"
