@@ -1,3 +1,5 @@
+pub mod remote;
+
 use serde::{Serialize, de::DeserializeOwned};
 use async_std::channel::Sender;
 use async_std::sync::Arc;
@@ -12,7 +14,7 @@ use switch_channel::err::recv::RecvError;
 
 pub trait Role {
     type Actor: Actor + Serialize + DeserializeOwned;
-    type Key: Hash + Eq + Serialize + DeserializeOwned;
+    type Key: Hash + Eq + Serialize + DeserializeOwned + Copy;
 
     type Calls: Handler<Self::Actor>;
     type MutCalls: MutHandler<Self::Actor>;
