@@ -70,8 +70,8 @@ impl<T: Role + ?Sized + 'static> Stage<T>{
             };
 
         let key_blob = KeyBlob::new::<T>(key.clone());
-        match self.ctx.backstage.get_actor(key_blob){
-            Lease::Empty(empty) => todo!(),
+        match self.ctx.backstage.get_actor(key_blob).await{
+            Lease::Empty(empty) => self.empty_lease_handler(empty, key).await,
             Lease::Created(created) => self.created_lease_handler(created, key).await,
             Lease::Stored(stored) => todo!(),
         }
@@ -106,5 +106,9 @@ impl<T: Role + ?Sized + 'static> Stage<T>{
                 Box::pin(self.get_actor(key))
             }
         }
+    }
+
+    async fn empty_lease_handler(&self, empty: EmptyLease, key: T::Key) -> ActorChannel<T>{
+        todo!();
     }
 }
