@@ -3,20 +3,20 @@ mod stage;
 use stage::Stage;
 use dashmap::DashMap;
 use std::any::{Any, TypeId};
-use std::sync::Arc;
+use std::sync::{Weak, Arc};
 use crate::actor::{Role, ActorChannel};
 use crate::BroadwayContext;
 
 pub struct Venue{
     stages: DashMap<TypeId, Box<dyn Any>>,
-    ctx: Arc<BroadwayContext>,
+    ctx: Weak<BroadwayContext>,
 }
 
 impl Venue{
-    pub fn new(ctx: BroadwayContext) -> Self{
+    pub fn new(ctx: Weak<BroadwayContext>) -> Self{
         Self{
             stages: DashMap::new(),
-            ctx: Arc::new(ctx),
+            ctx,
         }
     }
 

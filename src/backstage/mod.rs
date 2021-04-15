@@ -45,7 +45,7 @@ pub trait Backstage: Send + Sync{
 
     /// Try to set the actor as being at a given location (should always be local)
     /// this should really always turn a created lease.
-    async fn set_actor(&self, empty: EmptyLease, actor: ActorBlob, location: LocationBlob) -> CreatedLease;
+    async fn set_actor(&self, empty: EmptyLease, location: LocationBlob) -> CreatedLease;
 
     /// Update the actor, only the controlling node can do this
     async fn update_actor(&self, actor: ActorBlob, lease: LocalLease) -> LocalLease;

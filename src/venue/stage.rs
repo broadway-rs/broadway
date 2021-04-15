@@ -1,5 +1,5 @@
 use dashmap::{DashMap, mapref::entry::Entry};
-use std::sync::Arc;
+use std::sync::{Arc, Weak};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::future::Future;
 use std::pin::Pin;
@@ -27,7 +27,7 @@ impl<T: Role + ?Sized + 'static> ActorManager<T>{
         }
     }
 
-    fn start_actor(&mut self, ctx: Arc<BroadwayContext>){
+    fn start_actor(&mut self, ctx: Weak<BroadwayContext>){
         if let Actor::Local(ref mut local) = self.instance{
             local.start_actor(ctx);
         }
@@ -39,20 +39,13 @@ enum Actor<T: Role + ?Sized>{
     Remote(RemoteActor<T>)
 }
 
-pub enum ActorStatus{
-    Starting,
-    Running,
-    ShuttingDown,
-    Off
-}
-
 pub struct Stage<T: Role + ?Sized + 'static>{
     actors: DashMap<T::Key, ActorManager<T>>,
-    ctx: Arc<BroadwayContext>,
+    ctx: Weak<BroadwayContext>,
 }
 
 impl<T: Role + ?Sized + 'static> Stage<T>{
-    pub fn new(ctx: Arc<BroadwayContext>) -> Self{
+    pub fn new(ctx: Weak<BroadwayContext>) -> Self{
         Self{
             actors: DashMap::new(),
             ctx,
@@ -70,7 +63,7 @@ impl<T: Role + ?Sized + 'static> Stage<T>{
             };
 
         let key_blob = KeyBlob::new::<T>(key.clone());
-        match self.ctx.backstage.get_actor(key_blob).await{
+        match self.ctx.upgrade().unwrap().backstage.get_actor(key_blob).await{
             Lease::Empty(empty) => self.empty_lease_handler(empty, key).await,
             Lease::Created(created) => self.created_lease_handler(created, key).await,
             Lease::Stored(stored) => todo!(),
@@ -109,6 +102,17 @@ impl<T: Role + ?Sized + 'static> Stage<T>{
     }
 
     async fn empty_lease_handler(&self, empty: EmptyLease, key: T::Key) -> ActorChannel<T>{
+        // If we get an empty lease, we need to try to claim it (THIS BEHAVIOR SOULD BE CHANGED
+        // IN THE FUTURE TO ACCOUNT FOR THE NODES CURRENT QUOTAS)
+        // We either claim it, or don't, but either way we will get a created lease
+        // which we can handle like any other
+        let ctx = self.ctx.upgrade().unwrap();
+        self.created_lease_handler(
+            ctx.backstage.set_actor(empty, ctx.transport.get_local()).await, 
+            key).await
+    }
+
+    async fn stored_lease_handler(&self, stored: StoredLease, key: T::Key) -> ActorChannel<T>{
         todo!();
     }
 }
