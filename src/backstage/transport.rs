@@ -1,9 +1,6 @@
-use crate::data::LocationBlob;
+use async_std::net::IpAddr;
 
-pub trait Transport: Send + Sync{
-    fn get_local(&self) -> LocationBlob;
-}
-
-pub trait Location{
-    
+pub enum Location{
+    Ip(IpAddr),
+    URI(String),
 }

@@ -1,6 +1,5 @@
 pub mod remote;
 
-use serde::{Serialize, de::DeserializeOwned};
 use async_std::channel::Sender;
 use async_std::sync::{Weak, Arc};
 use async_std::sync::RwLock;
@@ -14,8 +13,8 @@ use switch_channel::err::recv::RecvError;
 use crate::BroadwayContext;
 
 pub trait Role {
-    type Actor: Actor + Serialize + DeserializeOwned;
-    type Key: Hash + Eq + Serialize + DeserializeOwned + Copy;
+    type Actor: Actor;
+    type Key: Hash + Eq + Copy;
 
     type Calls: Handler<Self::Actor>;
     type MutCalls: MutHandler<Self::Actor>;

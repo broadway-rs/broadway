@@ -5,7 +5,6 @@ use std::future::Future;
 use std::pin::Pin;
 use crate::actor::{Role, ActorChannel, ActorInstance, remote::RemoteActor};
 use crate::BroadwayContext;
-use crate::data::*;
 use crate::backstage::*;
 
 /// This might get removed, but the idea with this is that
@@ -62,8 +61,7 @@ impl<T: Role + ?Sized + 'static> Stage<T>{
                 return o.get().comms.clone()
             };
 
-        let key_blob = KeyBlob::new::<T>(key.clone());
-        match self.ctx.upgrade().unwrap().backstage.get_actor(key_blob).await{
+        match self.ctx.upgrade().unwrap().backstage.get_actor(key.clone()).await{
             Lease::Empty(empty) => self.empty_lease_handler(empty, key).await,
             Lease::Created(created) => self.created_lease_handler(created, key).await,
             Lease::Stored(stored) => todo!(),
