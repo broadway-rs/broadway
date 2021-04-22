@@ -24,7 +24,7 @@ pub trait Role {
 pub trait Actor: Send + Sync {
     fn new() -> Self;
 
-    async fn start(&mut self, ctx: Weak<BroadwayContext>) {}
+    async fn start(&mut self, ctx: Arc<BroadwayContext>) {}
 
     async fn stop(&mut self) {}
 }
@@ -72,7 +72,7 @@ impl<T: 'static + Role + ?Sized> ActorInstance<T> {
     /// This function is kind of weird, because I only ever want an actor that has been instantiated
     /// to start ONCE across an entire cluster, knowing this may be impossible, I atleast want to ensure
     /// it only ever happens ONCE per node.
-    pub(crate) fn start_actor(&mut self, ctx: Weak<BroadwayContext>){
+    pub(crate) fn start_actor(&mut self, ctx: Arc<BroadwayContext>){
         if let Some(mut actor) = self.actor.take(){
             let (calls, mut_calls) = self.channel.take().unwrap();
             self.handling_loop = Some(Box::new(task::spawn(Self::run_actor(ctx, actor, calls, mut_calls))))
@@ -80,7 +80,7 @@ impl<T: 'static + Role + ?Sized> ActorInstance<T> {
     }
 
     async fn run_actor(
-        ctx: Weak<BroadwayContext>,
+        ctx: Arc<BroadwayContext>,
         mut actor: T::Actor,
         calls: DiSwitchReceiver<T::Calls>,
         mut_calls: DiSwitchReceiver<T::MutCalls>,
@@ -175,8 +175,10 @@ impl<T: 'static + Role + ?Sized> ActorInstance<T> {
     }
 }
 
+/*
 unsafe impl<T: Role> Send for ActorInstance<T> {}
 unsafe impl<T: Role> Sync for ActorInstance<T> {}
+*/
 
 #[async_trait]
 pub trait Handler<T>: Send {
@@ -193,4 +195,6 @@ pub struct Call<C, R> {
     pub call: C,
 }
 
+/*
 unsafe impl<T: Send, R: Send> Send for Call<T, R> {}
+*/

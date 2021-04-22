@@ -26,7 +26,7 @@ impl<T: Role + ?Sized + 'static> ActorManager<T>{
         }
     }
 
-    fn start_actor(&mut self, ctx: Weak<BroadwayContext>){
+    fn start_actor(&mut self, ctx: Arc<BroadwayContext>){
         if let Actor::Local(ref mut local) = self.instance{
             local.start_actor(ctx);
         }
@@ -40,11 +40,12 @@ enum Actor<T: Role + ?Sized>{
 
 pub struct Stage<T: Role + ?Sized + 'static>{
     actors: DashMap<T::Key, ActorManager<T>>,
+    pub(self) backstage: Box<dyn Backstage<T>>,
     ctx: Weak<BroadwayContext>,
 }
 
 impl<T: Role + ?Sized + 'static> Stage<T>{
-    pub fn new(ctx: Weak<BroadwayContext>) -> Self{
+    pub fn new(ctx: Arc<BroadwayContext>) -> Self{
         Self{
             actors: DashMap::new(),
             ctx,
