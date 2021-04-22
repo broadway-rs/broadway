@@ -38,8 +38,6 @@ pub struct StoredLease{
 
 #[async_trait]
 pub trait Backstage: Send + Sync{
-    async fn init_actor(&mut self, ctx: BroadwayContext);
-
     /// Try to get the actor
     async fn get_actor(&self, key: KeyBlob) -> Lease;
 
