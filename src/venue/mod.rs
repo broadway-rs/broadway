@@ -7,13 +7,15 @@ use std::sync::{Weak, Arc};
 use crate::actor::{Role, ActorChannel};
 use crate::BroadwayContext;
 
-pub struct Venue{
+use crate::Backstage;
+
+pub struct Venue<B: Backstage>{
     stages: DashMap<TypeId, Box<dyn Any>>,
-    ctx: Weak<BroadwayContext>,
+    ctx: Weak<BroadwayContext<B>>,
 }
 
-impl Venue{
-    pub fn new(ctx: Weak<BroadwayContext>) -> Self{
+impl<B: Backstage + 'static> Venue<B>{
+    pub fn new(ctx: Weak<BroadwayContext<B>>) -> Self{
         Self{
             stages: DashMap::new(),
             ctx,
@@ -25,10 +27,10 @@ impl Venue{
         let type_id = TypeId::of::<T>();
         self.stages
             .entry(type_id.clone())
-            .or_insert(Box::new(Stage::<T>::new(self.ctx.clone())))
+            .or_insert(Box::new(Stage::<T, B>::new(self.ctx.clone().upgrade().unwrap())))
             .downgrade()
             .value()
-            .downcast_ref::<Stage<T>>()
+            .downcast_ref::<Stage<T, B>>()
             .unwrap()
             .get_actor(key)
             .await

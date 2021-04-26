@@ -1,5 +1,4 @@
 pub mod remote;
-
 use async_std::channel::Sender;
 use async_std::sync::{Weak, Arc};
 use async_std::sync::RwLock;
@@ -10,7 +9,9 @@ use futures::future;
 use std::ops::{Deref, DerefMut};
 use switch_channel::async_channel::async_std::{diunbounded, DiSwitchReceiver, DiSwitchSender};
 use switch_channel::err::recv::RecvError;
+
 use crate::BroadwayContext;
+use crate::Backstage;
 
 pub trait Role {
     type Actor: Actor;
@@ -24,7 +25,7 @@ pub trait Role {
 pub trait Actor: Send + Sync {
     fn new() -> Self;
 
-    async fn start(&mut self, ctx: Arc<BroadwayContext>) {}
+    async fn start<B: Backstage + 'static>(&mut self, ctx: Arc<BroadwayContext<B>>) {}
 
     async fn stop(&mut self) {}
 }
@@ -72,15 +73,15 @@ impl<T: 'static + Role + ?Sized> ActorInstance<T> {
     /// This function is kind of weird, because I only ever want an actor that has been instantiated
     /// to start ONCE across an entire cluster, knowing this may be impossible, I atleast want to ensure
     /// it only ever happens ONCE per node.
-    pub(crate) fn start_actor(&mut self, ctx: Arc<BroadwayContext>){
+    pub(crate) fn start_actor<B: Backstage + 'static>(&mut self, ctx: Arc<BroadwayContext<B>>){
         if let Some(mut actor) = self.actor.take(){
             let (calls, mut_calls) = self.channel.take().unwrap();
             self.handling_loop = Some(Box::new(task::spawn(Self::run_actor(ctx, actor, calls, mut_calls))))
         }
     }
 
-    async fn run_actor(
-        ctx: Arc<BroadwayContext>,
+    async fn run_actor<B: Backstage + 'static>(
+        ctx: Arc<BroadwayContext<B>>,
         mut actor: T::Actor,
         calls: DiSwitchReceiver<T::Calls>,
         mut_calls: DiSwitchReceiver<T::MutCalls>,
