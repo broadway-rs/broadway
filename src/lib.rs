@@ -26,7 +26,7 @@ impl<B: Backstage + 'static> BroadwayContext<B>{
         });
 
         let venue = Venue::new(Arc::downgrade(&ctx));
-        ctx.venue.set(venue).unwrap();
+        if let Err(_) = ctx.venue.set(venue) {panic!("Failed to set venue!")};
         ctx
     }
 
