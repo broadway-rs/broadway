@@ -13,3 +13,12 @@ futures = "0.3.13"
 async-trait = "0.1.48"
 broadway_macro = {git = "https://github.com/broadway-rs/broadway-macro", branch = "main"}
 dashmap = "4.0.2"
+once_cell = "1.7.2"
+
+[[example]]
+name = "greeter"
+path = "./examples/greeter.rs"
+
+[[example]]
+name = "calculator"
+path = "./examples/calculator.rs"

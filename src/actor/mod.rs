@@ -15,7 +15,7 @@ use crate::Backstage;
 
 pub trait Role {
     type Actor: Actor;
-    type Key: Hash + Eq + Copy;
+    type Key: Hash + Eq + Clone;
 
     type Calls: Handler<Self::Actor>;
     type MutCalls: MutHandler<Self::Actor>;
