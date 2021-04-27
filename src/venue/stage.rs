@@ -106,9 +106,9 @@ impl<T: Role + ?Sized + 'static, B: Backstage + 'static> Stage<T, B>{
         // which we can handle like any other
         todo!();
         let ctx = self.ctx.upgrade().unwrap();
-        /*self.created_lease_handler(
-            //self.backstage.set_actor(empty, ctx.transport.get_local()).await, 
-            key).await*/
+        self.created_lease_handler(
+            ctx.backstage.set_actor(empty, ctx.transport.get_local().clone()).await, 
+            key).await
     }
 
     async fn stored_lease_handler(&self, stored: StoredLease<T>, key: T::Key) -> ActorChannel<T>{

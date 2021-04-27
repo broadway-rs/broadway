@@ -7,6 +7,7 @@ pub mod backstage;
 
 use crate::backstage::Lease;
 use crate::backstage::Backstage;
+use crate::backstage::transport::{Transport, Location};
 use crate::venue::Venue;
 use crate::actor::Role;
 
@@ -16,13 +17,15 @@ use std::sync::atomic::{AtomicPtr, Ordering};
 pub struct BroadwayContext<B: Backstage>{
     backstage: B,
     venue: OnceCell<Venue<B>>,
+    transport: Transport
 }
 
 impl<B: Backstage + 'static> BroadwayContext<B>{
-    pub fn new(backstage: B) -> Arc<Self>{
+    pub fn new(backstage: B, location: Location) -> Arc<Self>{
         let ctx = Arc::new(Self{
             backstage,
-            venue: OnceCell::new()
+            venue: OnceCell::new(),
+            transport: Transport::new(location)
         });
 
         let venue = Venue::new(Arc::downgrade(&ctx));
