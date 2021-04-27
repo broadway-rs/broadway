@@ -40,7 +40,6 @@ enum Actor<T: Role + ?Sized>{
 
 pub struct Stage<T: Role + ?Sized + 'static, B: Backstage>{
     actors: DashMap<T::Key, ActorManager<T>>,
-    pub(self) backstage: B,
     ctx: Weak<BroadwayContext<B>>,
 }
 
@@ -48,7 +47,6 @@ impl<T: Role + ?Sized + 'static, B: Backstage + 'static> Stage<T, B>{
     pub async fn new(ctx: Arc<BroadwayContext<B>>) -> Self{
         Self{
             actors: DashMap::new(),
-            backstage: B::new(ctx.clone()).await,
             ctx: Arc::downgrade(&ctx),
         }
     }
@@ -63,7 +61,7 @@ impl<T: Role + ?Sized + 'static, B: Backstage + 'static> Stage<T, B>{
                 return o.get().comms.clone()
             };
 
-        match self.backstage.get_actor(key.clone()).await{
+        match self.ctx.clone().upgrade().unwrap().backstage.get_actor(key.clone()).await{
             Lease::Empty(empty) => self.empty_lease_handler(empty, key).await,
             Lease::Created(created) => self.created_lease_handler(created, key).await,
             Lease::Stored(stored) => todo!(),
