@@ -27,7 +27,7 @@ impl<B: Backstage + 'static> Venue<B>{
         let type_id = TypeId::of::<T>();
         self.stages
             .entry(type_id.clone())
-            .or_insert(Box::new(Stage::<T, B>::new(self.ctx.clone().upgrade().unwrap())))
+            .or_insert(Box::new(Stage::<T, B>::new(self.ctx.clone().upgrade().unwrap()).await))
             .downgrade()
             .value()
             .downcast_ref::<Box<Stage<T, B>>>()
