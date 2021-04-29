@@ -30,7 +30,7 @@ impl<B: Backstage + 'static> Venue<B>{
             .or_insert(Box::new(Stage::<T, B>::new(self.ctx.clone().upgrade().unwrap())))
             .downgrade()
             .value()
-            .downcast_ref::<Stage<T, B>>()
+            .downcast_ref::<Box<Stage<T, B>>>()
             .unwrap()
             .get_actor(key)
             .await
