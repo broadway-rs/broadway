@@ -36,7 +36,7 @@ impl<B: Backstage + 'static> BroadwayContext<B>{
         ctx
     }
 
-    async fn get_actor<T: Role + ?Sized + 'static>(&self, key: T::Key) -> ActorChannel<T>{
+    pub async fn get_actor<T: Role + ?Sized + 'static>(&self, key: T::Key) -> ActorChannel<T>{
         self.venue.get().unwrap().get_actor::<T>(key).await
     }
 }
