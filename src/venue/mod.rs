@@ -29,7 +29,7 @@ impl<B: Backstage + 'static> Venue<B>{
             .entry(type_id.clone())
             .or_insert(Box::new(Stage::<T, B>::new(self.ctx.clone().upgrade().unwrap()).await))
             .downgrade();
-        std::any::type_name_of_val(&value);
+        println!("{}", std::any::type_name_of_val(&value));
         value
             .value()
             .downcast_ref::<Box<Stage<T, B>>>()
