@@ -25,14 +25,12 @@ impl<B: Backstage + 'static> Venue<B>{
     pub async fn get_actor<T>(&self, key: T::Key) -> ActorChannel<T>
         where T: Role + ?Sized + 'static{
         let type_id = TypeId::of::<T>();
-        let value = self.stages
+        self.stages
             .entry(type_id.clone())
             .or_insert(Box::new(Stage::<T, B>::new(self.ctx.clone().upgrade().unwrap()).await))
-            .downgrade();
-        println!("{}", std::any::type_name_of_val(&value));
-        value
+            .downgrade()
             .value()
-            .downcast_ref::<Box<Stage<T, B>>>()
+            .downcast_ref::<Stage<T, B>>()
             .unwrap()
             .get_actor(key)
             .await
