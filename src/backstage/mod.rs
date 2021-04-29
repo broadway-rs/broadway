@@ -23,21 +23,21 @@ pub enum CreatedLease<A: Role + ?Sized>{
 }
 
 pub struct LocalLease<A: Role + ?Sized>{
-    key: A::Key
+    pub key: A::Key
 }
 
 pub struct RemoteLease<A: Role + ?Sized>{
-    key: A::Key,
-    location: Location,
+    pub key: A::Key,
+    pub location: Location,
 }
 
 pub struct EmptyLease<A: Role + ?Sized>{
-    key: A::Key,
+    pub key: A::Key,
 }
 
 pub struct StoredLease<A: Role + ?Sized>{
-    key: A::Key,
-    actor_data: Box<A::Actor>,
+    pub key: A::Key,
+    pub actor_data: Box<A::Actor>,
 }
 
 #[async_trait]
