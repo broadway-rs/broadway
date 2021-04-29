@@ -61,7 +61,7 @@ impl<T: Role + ?Sized + 'static, B: Backstage + 'static> Stage<T, B>{
                 return o.get().comms.clone()
             };
 
-        match self.ctx.clone().upgrade().unwrap().backstage.get_actor(key.clone()).await{
+        match self.ctx.clone().upgrade().unwrap().backstage.get().unwrap().get_actor(key.clone()).await{
             Lease::Empty(empty) => self.empty_lease_handler(empty, key).await,
             Lease::Created(created) => self.created_lease_handler(created, key).await,
             Lease::Stored(stored) => todo!(),
@@ -107,7 +107,7 @@ impl<T: Role + ?Sized + 'static, B: Backstage + 'static> Stage<T, B>{
         todo!();
         let ctx = self.ctx.upgrade().unwrap();
         self.created_lease_handler(
-            ctx.backstage.set_actor(empty, ctx.transport.get_local().clone()).await, 
+            ctx.backstage.get().unwrap().set_actor(empty, ctx.transport.get_local().clone()).await, 
             key).await
     }
 
