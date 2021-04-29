@@ -1,3 +1,4 @@
+#![feature(type_name_of_val)]
 pub mod actor;
 use crate::actor::ActorChannel;
 use once_cell::sync::OnceCell;
