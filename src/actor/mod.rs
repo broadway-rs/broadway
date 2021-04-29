@@ -14,8 +14,8 @@ use crate::BroadwayContext;
 use crate::Backstage;
 
 pub trait Role {
-    type Actor: Actor;
-    type Key: Hash + Eq + Clone;
+    type Actor: Actor + Send + Sync;
+    type Key: Hash + Eq + Clone + Send + Sync;
 
     type Calls: Handler<Self::Actor>;
     type MutCalls: MutHandler<Self::Actor>;

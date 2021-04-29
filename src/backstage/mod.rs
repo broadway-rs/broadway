@@ -37,7 +37,7 @@ pub struct EmptyLease<A: Role + ?Sized>{
 
 pub struct StoredLease<A: Role + ?Sized>{
     key: A::Key,
-    actor_data: A::Actor,
+    actor_data: Box<A::Actor>,
 }
 
 #[async_trait]
@@ -46,10 +46,7 @@ pub trait Backstage: Send + Sync + Sized{
     async fn new(ctx: Arc<BroadwayContext<Self>>) -> Self;
 
     /// Try to get the actor
-    async fn get_actor<A>(&self, key: A::Key) -> Lease<A>
-        where A: Role + ?Sized,
-              <A as Role>::Key: Send,
-              <A as Role>::Actor: Send + Sync;
+    async fn get_actor<A: Role + ?Sized>(&self, key: A::Key) -> Lease<A>;
 
     /// Try to set the actor as being at a given location (should always be local)
     /// this should really always turn a created lease.
