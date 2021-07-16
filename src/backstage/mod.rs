@@ -11,59 +11,61 @@ use crate::actor::{Role, ActorChannel, Actor};
 use crate::BroadwayContext;
 use async_trait::async_trait;
 
-pub enum Lease<A: Role + ?Sized>{
-    Empty(EmptyLease<A>),
-    Created(CreatedLease<A>),
-    Stored(StoredLease<A>),
+pub enum Lease<'a>{
+    Empty(EmptyLease),
+    Created(CreatedLease),
+    Stored(StoredLease<'a>),
 }
 
-pub enum CreatedLease<A: Role + ?Sized>{
-    Local(LocalLease<A>),
-    Remote(RemoteLease<A>)
+pub enum CreatedLease{
+    Local(LocalLease),
+    Remote(RemoteLease)
 }
 
-pub struct LocalLease<A: Role + ?Sized>{
-    pub key: A::Key
+pub struct LocalLease{
+    pub key: KeyBlob,
 }
 
-pub struct RemoteLease<A: Role + ?Sized>{
-    pub key: A::Key,
+pub struct RemoteLease{
+    pub key: KeyBlob,
     pub location: Location,
 }
 
-pub struct EmptyLease<A: Role + ?Sized>{
-    pub key: A::Key,
+pub struct EmptyLease{
+    pub key: KeyBlob,
 }
 
-pub struct StoredLease<A: Role + ?Sized>{
-    pub key: A::Key,
-    pub actor_data: Box<A::Actor>,
+pub struct StoredLease<'a>{
+    pub key: KeyBlob,
+    pub actor_data: ActorBlob,
 }
 
 #[async_trait]
 pub trait Backstage: Send + Sync + Sized{
-    /// Initialize the backend
-    async fn new(ctx: Arc<BroadwayContext<Self>>) -> Self;
-
     /// Try to get the actor
-    async fn get_actor<A: Role + ?Sized>(&self, key: A::Key) -> Lease<A>;
+    async fn get_actor(&self, key: KeyBlob) -> Lease;
 
     /// Try to set the actor as being at a given location (should always be local)
     /// this should really always turn a created lease.
-    async fn set_actor<A: Role + ?Sized>(&self, empty: EmptyLease<A>, location: Location) -> CreatedLease<A>;
+    async fn set_actor(&self, empty: EmptyLease, location: Location) -> CreatedLease;
 
     /// Update the actor, only the controlling node can do this
-    async fn update_actor<A: Role + ?Sized>(&self, actor: &A::Actor, lease: LocalLease<A>) -> LocalLease<A>;
+    async fn update_actor(&self, actor: &ActorBlob, lease: LocalLease) -> LocalLease;
 
     /// Store the local actor, this consumes the given actor
-    async fn store_local_actor<A: Role + ?Sized>(&self, actor: &A::Actor, lease: LocalLease<A>) -> StoredLease<A>;
+    async fn store_local_actor(&self, actor: &ActorBlob, lease: LocalLease) -> StoredLease;
 
     /// Store an actor on another node, necessary for scale down and fail over
-    async fn store_remote_actor<A: Role + ?Sized>(&self, lease: RemoteLease<A>) -> StoredLease<A>;
+    async fn store_remote_actor(&self, lease: RemoteLease) -> StoredLease<'a>;
 
     /// Delete the local actor
-    async fn delete_local_actor<A: Role + ?Sized>(&self, actor: &A::Actor, lease: LocalLease<A>) -> EmptyLease<A>;
+    async fn delete_local_actor(&self, actor: &ActorBlob, lease: LocalLease) -> EmptyLease;
 
     /// Delete an actor on another node, this consumes the given actor
-    async fn delete_remote_actor<A: Role + ?Sized>(&self, lease: RemoteLease<A>) -> EmptyLease<A>;
+    async fn delete_remote_actor(&self, lease: RemoteLease) -> EmptyLease;
+}
+
+#[async_trait]
+pub trait BackstageBuilder{
+
 }
